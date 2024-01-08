@@ -3,7 +3,7 @@ const os = require('os');
 const fs = require('fs');
 
 const updateInterval = 100;
-const logInterval = 1000;
+const logInterval = 60;
 const logFilePath = 'activityMonitor.log';
 
 function getCommand(){
@@ -25,30 +25,35 @@ function executeCommand(command){
     });
 }
 
+function getCurrentTime() {
+    return Math.floor(Date.now() / 1000);
+}
+
 async function activityMonitor(){
     const command = getCommand();
-    
-    setTimeout(async () => {
-        const logContainer = [];
-        if(!fs.existsSync(logFilePath)){
-            fs.writeFileSync(logFilePath, '');
-        }
+    let previousLogTime = getCurrentTime();
 
-        setInterval(async () => {
-            try{
-                const result = await executeCommand(command);          
-                logContainer.push(`${Math.floor(Date.now() / 1000)} ${result}\n`);
-                console.clear();
-                console.log(result);
-            } catch {
-                console.error('Error:', error.message);
+    if (!fs.existsSync(logFilePath)) {
+        fs.writeFileSync(logFilePath, '');
+    }
+
+    setInterval(async () => {
+        try{
+            const result = await executeCommand(command);          
+            console.clear();
+            console.log(result);
+
+            const currentTime = getCurrentTime();
+            const log = `${currentTime}: ${result.trim()}\n`;
+
+            if (currentTime - previousLogTime >= logInterval) {
+                fs.appendFileSync(logFilePath, log);
+                previousLogTime = currentTime;
             }
-        }, updateInterval);
-
-        logContainer.forEach(log => {
-            fs.appendFileSync(logFilePath, log);
-        });
-    }, logInterval);
+        } catch {
+            console.error('Error:', error.message);
+        }
+    }, updateInterval);
     
 }
 
