@@ -1,0 +1,58 @@
+[
+  {
+    "id": "04d93584-daff-463f-a542-456ee7893859",
+    "userId": "da0a7237-b800-4875-b648-6a3d57051235",
+    "cartId": "e6cc8a17-2f0a-4f58-831d-87a3b235697e",
+    "items": [
+      {
+        "product": {
+          "id": "afdd68c4-d359-45e6-b9fd-c8fdb2a162a0",
+          "title": "Pen",
+          "description": "Cute pen",
+          "price": 20
+        },
+        "count": 3
+      }
+    ],
+    "payment": {
+      "type": "",
+      "address": null,
+      "creditCard": null
+    },
+    "delivery": {
+      "type": "",
+      "address": null
+    },
+    "comments": "",
+    "status": "created",
+    "total": 60
+  },
+  {
+    "id": "f96fc49c-a82c-4a90-b2c8-7d57126a2d5c",
+    "userId": "da0a7237-b800-4875-b648-6a3d57051235",
+    "cartId": "6e98f553-00fb-4c8a-ac4f-853c31681741",
+    "items": [
+      {
+        "product": {
+          "id": "5c293ad0-19d0-41ee-baa3-4c648f9f7697",
+          "title": "Book",
+          "description": "Interesting book",
+          "price": 200
+        },
+        "count": 2
+      }
+    ],
+    "payment": {
+      "type": "",
+      "address": null,
+      "creditCard": null
+    },
+    "delivery": {
+      "type": "",
+      "address": null
+    },
+    "comments": "",
+    "status": "created",
+    "total": 400
+  }
+]

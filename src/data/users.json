@@ -1,0 +1,26 @@
+[
+  {
+    "id": "da0a7237-b800-4875-b648-6a3d57051235",
+    "email": "ann.jones@epam.com",
+    "password": "$2b$10$HQQa/AOM4iBLylBuVsNVVuuYmD6luD/9xHXsmar8eiMGb96rblmfa",
+    "role": "admin"
+  },
+  {
+    "id": "da0a7237-b800-4875-b648-6a3d57051234",
+    "email": "tom.james@epam.com",
+    "password": "$2b$10$HQQa/AOM4iBLylBuVsNVVuuYmD6luD/9xHXsmar8eiMGb96rblmfa",
+    "role": "user"
+  },
+  {
+    "id": "1f4ec955-b44f-4fab-97f8-7e7c42e084ff",
+    "email": "anna.smith@epam.com",
+    "password": "$2b$10$VTI6rMz6Gi7xrhM8tDYYLOTyCouGjT3uheqxIdy9dpiQVKVyK2Fei",
+    "role": "user"
+  },
+  {
+    "id": "bf055aa1-aeef-4d79-a351-a3b247cc08f7",
+    "email": "tim.pumba@epam.com",
+    "password": "$2b$10$fHp8u86XOdHPZ13jmHOeQOMzGxWyiBhUCdqvJ/bFQoED8kHbTapW2",
+    "role": "user"
+  }
+]
