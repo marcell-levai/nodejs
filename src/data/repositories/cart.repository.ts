@@ -1,162 +1,145 @@
-import fs from 'fs';
-import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import { CartEntity, CartItemEntity, UpdateCartItemEntity } from '../../schemas/cart.entity';
-import { findProductById } from './product.repository';
-import { OrderEntity } from 'schemas/order.entity';
-import Joi from 'joi';
+import { CartEntity, CartItemEntity, CartModel } from '../../schemas/cart.entity';
 
-const cartFilePath = path.join(__dirname, '../../data/carts.json');
-const orderFilePath = path.join(__dirname, '../../data/orders.json');
-
-function getAllCarts(): CartEntity[] {
-    try {
-      const carts = fs.readFileSync(cartFilePath, 'utf8');
-      return JSON.parse(carts);
-    } catch (error) {
-      console.error('Error reading or parsing JSON:', error.message);
-      return [];
-    }
-}
-
-function findCart(userId: string) {
-    const carts = getAllCarts();
-    let cart: CartEntity = carts.find((cart) => cart.userId === userId && !cart.isDeleted);
-    
-    if(!cart){
-        cart = {
-          id: uuidv4(),
-          userId: userId,
-          isDeleted: false,
-          items: []
-        };
-        carts.push(cart);
-        fs.writeFileSync(cartFilePath, JSON.stringify(carts, null, 2));  
-    }
-
-    return generateResponse(cart);
-}
-
-function changeCart(userId: string, items: UpdateCartItemEntity[]) {
-  const carts = getAllCarts();
-  const cartIndex = carts.findIndex((cart) => cart.userId === userId && !cart.isDeleted);
-
-  if (cartIndex === -1) {
-    return null;
+export class CartRepository {
+  getCart(userId: string): Promise<CartEntity> {
+    return CartModel.findOne({ userId, isDeleted: false }).exec();
   }
 
-  const products = Array.isArray(items)
-  ? items.map(({ productId, count }) => {
-    const product = findProductById(productId);
-    return { product: product, count: count };
-  })
-  : [items].map(({ productId, count }) => {
-    const product = findProductById(productId);
-    return { product: product, count: count };
-  });
-  
-  carts[cartIndex].items = products;
-  fs.writeFileSync(cartFilePath, JSON.stringify(carts, null, 2), 'utf8');
-
-  return generateResponse(carts[cartIndex]);
-}
-
-function removeCart(userId: string): boolean {
-  const carts: CartEntity[] = getAllCarts();
-  const cartIndex = carts.findIndex((cart) => cart.userId === userId && !cart.isDeleted);
-
-  if (cartIndex !== -1) {
-    carts[cartIndex].isDeleted = true;
-    fs.writeFileSync(cartFilePath, JSON.stringify(carts, null, 2), 'utf8');
-    return true;
-  }
-
-  return false;
-}
-
-function createOrder(userId: string): OrderEntity{
-  const carts = getAllCarts();
-  let cart = carts.find((cart) => cart.userId === userId && !cart.isDeleted);
-
-  if(!cart || cart.items.length < 1){
-    return null;
-  }
-
-  const order: OrderEntity = {
-    id: uuidv4(),
-    userId: userId,
-    cartId: cart.id,
-    items: getCartItems(cart),
-    payment: {
-      type: '',
-      address: null,
-      creditCard: null,
-    },
-    delivery: {
-      type: '',
-      address: null,
-    },
-    comments: '',
-    status: 'created',
-    total: getTotalPrice(cart),
-  };
-
-  const orders = getAllOrders();
-  orders.push(order);
-  fs.writeFileSync(orderFilePath, JSON.stringify(orders, null, 2));
-  removeCart(userId);
-
-  return order;
-}
-
-function getAllOrders(){
-  try {
-    const orders = fs.readFileSync(orderFilePath, 'utf8');
-    return JSON.parse(orders);
-  } catch (error) {
-    console.error('Error reading or parsing JSON:', error.message);
-    return [];
-  }
-}
-
-function validateCartItems(items: UpdateCartItemEntity[]): boolean{   
-  const itemsArray = Array.isArray(items) ? items : [items];
-  const cartItemSchema = Joi.object({
-      productId: Joi.string().uuid().required(),
-      count: Joi.number().integer().min(0).required(),
+  createCart(userId: string): Promise<CartEntity> {
+    const newCart: CartEntity = new CartModel({
+      userId,
+      isDeleted: false,
+      items: [],
     });
 
-    const { error } = Joi.array().items(cartItemSchema).validate(itemsArray);
-    return !error;
+    return CartModel.create(newCart);
+  }
+
+  async removeCart(cart: CartEntity): Promise<CartEntity> {
+    cart.isDeleted = true;
+    return cart.save();
+  }
+
+  async updateCartItems(cart: CartEntity, items: CartItemEntity[]){
+    cart.items = items;
+    return cart.save();
+  }
 }
 
-function generateResponse(cart: CartEntity){
-    const cartItems = getCartItems(cart);
-    const cartResponse = { id: cart.id, items: cartItems };
-    const total = getTotalPrice(cart);
 
-    return { cart: cartResponse, total };
-}
+// async function findCart(userId: string): Promise<CartEntity> {
+//   try{
+//     const userCart = await CartModel.findOne({ userId: userId, isDeleted: false }).exec();
 
-function getCartItems(cart: CartEntity){
-  return Array.isArray(cart.items)
-  ? cart.items.map((cartItem: CartItemEntity) => {
-    return { product: cartItem.product, count: cartItem.count };
-  })
-  : [cart.items].map((cartItem: CartItemEntity) => {
-    return { product: cartItem.product, count: cartItem.count };
-  });
-}
+//     if (!userCart) {
+//       const newCart: CartEntity = new CartModel({
+//         userId,
+//         isDeleted: false,
+//         items: [],
+//       });
+//       const createdCart = await CartModel.create(newCart);
+//       return createdCart;
+//     }
+//     if (userCart.items.length > 0) {
+//       userCart.populate("items.product");
+//     }
 
-function getTotalPrice(cart: CartEntity): number{
-  let total = 0;
-  
-  total = cart.items.reduce((sum, { product, count }) => {  
-    return sum + (product ? product.price * count : 0);
-  }, 0);
+//     return userCart;
+//   } catch (error) {
+//     console.error('Error finding cart:', error);
+//     throw error;
+//   }
+// }
 
-  return total;
-}
+// async function changeCart(userId: string, items: UpdateCartItemEntity[]): Promise<CartEntity> {
+//   try {
+//     const userCart = await CartModel.findOne({ userId, isDeleted: false }).exec();
+//     if (!userCart) {
+//       throw new Error('User cart not found');
+//     }
 
-export { findCart, changeCart, removeCart, createOrder, validateCartItems };
+//     // userCart.items = [];
+//     // if (!Array.isArray(items)) {
+//     //   items = [items];
+//     // }
+//     // for (const item of items) {
+//     //   const { productId, count } = item;
+//     //   const product = null;//await findProductById(productId);
+//     //   if (!product) {
+//     //     throw new Error(`Product with ID ${productId} not found`);
+//     //   }
+
+//     //   const cartItem: CartItemEntity = {
+//     //     product: product,
+//     //     count: count,
+//     //   };
+//     //   userCart.items.push(cartItem);
+//     // }
+
+//     await CartModel.findByIdAndUpdate(userCart._id, userCart, { new: true }).exec();
+//     return await CartModel.findById(userCart._id).populate("items.product");
+//   } catch (error) {
+//     console.error('Error updating cart items:', error);
+//     throw error;
+//   }
+// }
+
+// async function removeCart(userId: string): Promise<boolean> {
+//   try {
+//     const userCart = await CartModel.findOne({ userId, isDeleted: { $ne: true } }).exec();
+//     if (!userCart) {
+//       throw new Error('User cart not found');
+//     }
+
+//     userCart.isDeleted = true;
+//     await userCart.save();
+//     return false;
+//   } catch (error) {
+//     console.error('Error removing cart:', error);
+//     throw error;
+//   }
+// }
+
+// async function createOrder(userId: string): Promise<OrderEntity>{
+//   const cart = await CartModel.findById(userId).populate("items.product");
+
+//   const order: OrderEntity = {
+//     userId: userId,
+//     cartId: cart._id,
+//     items: cart.items,
+//     payment: {
+//       type: '',
+//       address: null,
+//       creditCard: null,
+//     },
+//     delivery: {
+//       type: '',
+//       address: null,
+//     },
+//     comments: '',
+//     status: 'created',
+//     total: cart.items.reduce(
+//       (total, item) => total + item.product.price * item.count,
+//       0
+//     )
+//   };
+
+//   const createdOrder = await OrderModel.create(order);
+//   removeCart(userId);
+
+//   return createdOrder;
+// }
+
+// function validateCartItems(items: UpdateCartItemEntity[]): boolean{   
+//   const itemsArray = Array.isArray(items) ? items : [items];
+//   const cartItemSchema = Joi.object({
+//       productId: Joi.string().uuid().required(),
+//       count: Joi.number().integer().min(0).required(),
+//     });
+
+//     const { error } = Joi.array().items(cartItemSchema).validate(itemsArray);
+//     return !error;
+// }
+
+//export { findCart, changeCart, removeCart, createOrder, validateCartItems };
 

@@ -1,22 +1,12 @@
-import fs from 'fs';
-import * as path from 'path';
-import { ProductEntity } from 'schemas/product.entity';
+import ProductModel, { ProductEntity } from '../../schemas/product.entity';
 
-const filePath = path.join(__dirname, '../../data/products.json');
+export class ProductRepository {
 
-function findAll(): ProductEntity[] {
-  try {
-    const products = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(products);
-  } catch (error) {
-    console.error('Error reading or parsing JSON:', error.message);
-    return [];
+  getAllProduct(): Promise<ProductEntity[]> {
+      return ProductModel.find().exec();
+  }
+
+  findProductById(id: string): Promise<ProductEntity> {
+    return ProductModel.findOne({ _id: id }).exec();
   }
 }
-
-function findProductById(id: string): ProductEntity | undefined {
-    const products = findAll();
-    return products.find((product) => product.id === id);
-}
-
-export { findAll, findProductById };

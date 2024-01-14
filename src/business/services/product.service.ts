@@ -1,29 +1,24 @@
-import { findAll, findProductById } from '../../data/repositories/product.repository';
-import { RequestHandler } from 'express';
+import { ProductEntity } from '../../schemas/product.entity';
+import { ProductRepository } from '../../data/repositories/product.repository';
 
-export const getAll: RequestHandler = async (req, res) => {  
-  try{
-    const products = await findAll();  
-    return res.status(200).json({ data:{ products }, error: null });
-  }catch(error){
-    console.error('Internal Server error:', error);
-    return res.status(500).json({ data: null, error: { message: 'Internal Server error' } });
+export class ProductService {
+  private productRepository: ProductRepository;
+
+  constructor() {
+    this.productRepository = new ProductRepository();
   }
-}
 
-export const getById: RequestHandler = async (req, res) => {
-  const { productId } = req.params;
+  async getAllProduct(): Promise<ProductEntity[]> {
+    return await this.productRepository.getAllProduct();
+  }
 
-  try{
-    const product = await findProductById(productId);
+  async getProductById(id: string): Promise<ProductEntity>  {
+    const product = await this.productRepository.findProductById(id);
 
-    if(!product){
-      return res.status(404).json({ data: null, message: 'No product with such id' });
+    if (product) {
+      return product;
     }else{
-      return res.status(200).json({ data:{ product }, error: null });
-    }  
-  }catch(error){
-    console.error('Internal Server error:', error);
-    return res.status(500).json({ data: null, error: { message: 'Internal Server error' } });
+      throw { message: 'No product with such id', status: 404 };
+    }
   }
 }

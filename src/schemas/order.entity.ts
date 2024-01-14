@@ -1,9 +1,9 @@
-import { CartItemEntity} from './cart.entity';
+import { CartItemEntity, CartItemSchema} from './cart.entity';
+import mongoose, { Schema, Document } from 'mongoose';
 
 type ORDER_STATUS = 'created' | 'completed';
 
 export interface OrderEntity {
-  id: string, // uuid
   userId: string;
   cartId: string;
   items: CartItemEntity[] // products from CartEntity
@@ -20,3 +20,25 @@ export interface OrderEntity {
   status: ORDER_STATUS;
   total: number;
 }
+
+const OrderSchema: Schema = new Schema({
+  userId: { type: String, required: true },
+  cartId: { type: String, required: true },
+  items: { type: [CartItemSchema], required: true },
+  payment: {
+    type: { type: String, required: true },
+    address: { type: Schema.Types.Mixed },
+    creditCard: { type: Schema.Types.Mixed },
+  },
+  delivery: {
+    type: { type: String, required: true },
+    address: { type: Schema.Types.Mixed, required: true },
+  },
+  comments: { type: String },
+  status: { type: String, required: true },
+  total: { type: Number, required: true },
+})
+
+
+const OrderModel = mongoose.model<OrderEntity>('Order', OrderSchema);
+export default OrderModel;
