@@ -2,8 +2,12 @@ import bcrypt from 'bcrypt';
 import { UserRepository } from '../../data/repositories/user.repository';
 import { UserEntity } from '../../schemas/user.entity';
 import jwt from 'jsonwebtoken';
-import { TOKEN_KEY } from '../../../config';
+import debug from 'debug';
+import { TOKEN_KEY, AUTH_DEBUG } from '../../../config';
 
+const registerDebug = debug(`${AUTH_DEBUG}register`);
+const loginDebug = debug(`${AUTH_DEBUG}login`);
+const authenticateUserDebug = debug(`${AUTH_DEBUG}authenticateUser`);
 
 export class AuthService {
   private userRepository: UserRepository;
@@ -13,6 +17,8 @@ export class AuthService {
   }
 
   async register(email: string, password: string, role: string): Promise<UserEntity>{
+    registerDebug(`Registering user with email: ${email}`);
+
     const user = await this.userRepository.getUserByEmail(email);
     if (user) {
       throw { message: 'Email is not valid', status: 400 };
@@ -24,6 +30,8 @@ export class AuthService {
   }
 
   async login(email: string, password: string): Promise<string>{
+    loginDebug(`Logging in user with email: ${email}`);
+
     const user = await this.userRepository.getUserByEmail(email);
 
     if (!user) {
@@ -40,6 +48,8 @@ export class AuthService {
   }
 
   authenticateUser = async (userId: string) => {
+    authenticateUserDebug(`Authenticating user with ID: ${userId}`);
+
     if (!userId) {
       throw { message: 'You must be authorized user', status: 403 };
     }

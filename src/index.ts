@@ -6,13 +6,12 @@ import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import mongoose from 'mongoose';
 const swaggerDocument = YAML.load('./src/utils/swagger.yaml');
+import { MONGO_URL, PORT} from '../config';
+import { requestLogger } from 'logger';
 
-const PORT = process.env.PORT || 4000;
 const app : Express = express();
 
-const mongoUrl = 'mongodb://localhost:27017';
-
-mongoose.connect(mongoUrl)
+mongoose.connect(MONGO_URL)
   .then(() => {
     console.log('Connected to MongoDB');
   })
@@ -32,4 +31,44 @@ app.use('/api/products', productsRoutes);
 app.use('/api/profile/cart', cartsRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.listen(PORT, () => console.log(`The server is running on port ${PORT}`));
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    message: 'Application is healthy'
+  });
+});
+
+app.use(requestLogger);
+
+const server = app.listen(PORT, () => console.log(`The server is running on port ${PORT}`));
+let connections: any[] = [];
+
+server.on('connection', (connection) => {
+  connections.push(connection);
+
+  connection.on('close', () => {
+    connections = connections.filter((currentConnection) => currentConnection !== connection);
+  });
+});
+
+function shutdown() {
+  console.log('Received kill signal, shutting down gracefully');
+
+  server.close(() => {
+    console.log('Closed out remaining connections');
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    console.error('Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 20000);
+
+  connections.forEach((connection) => connection.end());
+
+  setTimeout(() => {
+    connections.forEach((connection) => connection.destroy());
+  }, 10000);
+}
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
