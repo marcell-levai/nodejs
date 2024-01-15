@@ -13,8 +13,10 @@ export class OrderService {
 
     async createOrder(userId: string){
         const cart = await this.cartRepository.getCart(userId);
-
-        if(!cart || cart.items.length < 0){
+        
+        if(cart && cart.items.length > 0){
+            await cart.populate("items.product");
+        }else{
             throw { status: 400, message: 'Cart is empty' };
         }
 
@@ -23,13 +25,13 @@ export class OrderService {
             cartId: cart._id,
             items: cart.items,
             payment: {
-                type: '',
-                address: null,
-                creditCard: null,
+                type: 'paypal',
+                address: 'London',
+                creditCard: '1234-1234-1234-1234',
             },
             delivery: {
-                type: '',
-                address: null,
+                type: 'post',
+                address: 'London',
             },
             comments: '',
             status: 'created',
@@ -38,6 +40,7 @@ export class OrderService {
                 0
             )
         };
+        this.cartRepository.removeCart(cart);
 
         return this.orderRepository.saveOrder(order);
     }

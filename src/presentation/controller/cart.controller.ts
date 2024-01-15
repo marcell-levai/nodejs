@@ -15,8 +15,14 @@ export class CartController {
     getCart: RequestHandler = async (req, res) => {
         try{
             const userId = req.header("x-user-id");
-            const cart = this.cartService.getCartByUserId(userId);
-            return res.status(200).json({ data: cart, error: null });
+            const cart = await this.cartService.getCartByUserId(userId);
+
+            return res.status(200).json({ data: { 
+                    cart: cart,
+                    total: cart.items.reduce(
+                    (total, item) => total + item.product.price * item.count,
+                    0)
+                }, error: null });
         }catch(error){
             return res.status(error.status || 500).json({ data: null, error: { message: error.message || 'Internal Server Error' }});
         }
@@ -26,8 +32,13 @@ export class CartController {
         try{
             const userId = req.header('x-user-id');
             const items: UpdateCartItemEntity[] = req.body;
-            const cart = this.cartService.updateCartItems(userId, items);
-            return res.status(200).json({ data: cart, error: null });
+            const cart = await this.cartService.updateCartItems(userId, items);
+            return res.status(200).json({ data: { 
+                cart: cart,
+                total: cart.items.reduce(
+                (total, item) => total + item.product.price * item.count,
+                0)
+            }, error: null });
         }catch(error){
             return res.status(error.status || 500).json({ data: null, error: { message: error.message || 'Internal Server Error' }});
         }
@@ -46,7 +57,7 @@ export class CartController {
     checkout: RequestHandler = async (req, res) => {
         try{
             const userId = req.header('x-user-id');
-            const order = this.orderService.createOrder(userId);
+            const order = await  this.orderService.createOrder(userId);
             return res.status(200).json({ data: order, error: null });
         }catch(error){
             return res.status(error.status || 500).json({ data: null, error: { message: error.message || 'Internal Server Error' }});

@@ -1,5 +1,6 @@
 import { CartItemEntity, CartItemSchema} from './cart.entity';
 import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 type ORDER_STATUS = 'created' | 'completed';
 
@@ -22,6 +23,7 @@ export interface OrderEntity {
 }
 
 const OrderSchema: Schema = new Schema({
+  _id: { type: String, default: uuidv4, alias: 'id' },
   userId: { type: String, required: true },
   cartId: { type: String, required: true },
   items: { type: [CartItemSchema], required: true },
@@ -37,7 +39,9 @@ const OrderSchema: Schema = new Schema({
   comments: { type: String },
   status: { type: String, required: true },
   total: { type: Number, required: true },
-})
+},
+{ versionKey: false }
+)
 
 
 const OrderModel = mongoose.model<OrderEntity>('Order', OrderSchema);
