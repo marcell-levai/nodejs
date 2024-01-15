@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { AuthService } from "../../business/services/auth.service";
+import jwt from 'jsonwebtoken';
+import { TOKEN_KEY } from '../../../config';
 
 export class AuthController {
     private authservice: AuthService;
@@ -28,13 +30,24 @@ export class AuthController {
         }
     }
 
-    authenticateUser = async (req: Request, res: Response, next: NextFunction) => {
-        try{
-            const userId = req.header('x-user-id');
-            await this.authservice.authenticateUser(userId);
-            next();
-        }catch(error){
-            return res.status(error.status || 500).json({ data: null, error: { message: error.message || 'Internal Server Error' }});
+    verifyToken = async (req: Request, res: Response, next: NextFunction) => {
+        const authHeader = req.headers.authorization;
+    
+        if (!authHeader) {
+            return res.status(401).send("Token is required");
         }
+    
+        const [tokenType, token] = authHeader.split(' ');
+    
+        if (tokenType !== 'Bearer') {
+            return res.status(403).send("Invalid Token");
+        }
+    
+        try {
+            jwt.verify(token, TOKEN_KEY!);
+            return next();
+        } catch (err) {
+            return res.status(401).send("Invalid Token");
+        }      
     }
 }

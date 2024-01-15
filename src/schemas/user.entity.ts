@@ -1,7 +1,7 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 
-export interface UserEntity {
+export interface UserEntity extends Document {
     email: string;
     password: string;
     role: string;

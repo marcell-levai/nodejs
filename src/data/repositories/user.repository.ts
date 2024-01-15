@@ -10,7 +10,7 @@ export class UserRepository {
     return UserModel.findOne({ _id }).exec();
   }
 
-  createUser(user: UserEntity): Promise<UserEntity> {
-    return UserModel.create(user);
+  createUser(email: string, password: string, role: string): Promise<UserEntity> {
+    return UserModel.create({email, password, role});
   }
 }

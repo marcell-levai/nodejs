@@ -1,8 +1,9 @@
 import bcrypt from 'bcrypt';
-import { Request, Response, NextFunction } from 'express';
 import { UserRepository } from '../../data/repositories/user.repository';
-import UserModel, { UserEntity } from '../../schemas/user.entity';
+import { UserEntity } from '../../schemas/user.entity';
 import jwt from 'jsonwebtoken';
+import { TOKEN_KEY } from '../../../config';
+
 
 export class AuthService {
   private userRepository: UserRepository;
@@ -18,9 +19,8 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser: UserEntity = {  email, password: hashedPassword, role };
 
-    return this.userRepository.createUser(newUser);
+    return this.userRepository.createUser(email, hashedPassword, role);
   }
 
   async login(email: string, password: string): Promise<string>{
@@ -33,7 +33,7 @@ export class AuthService {
     const passwordsMatch = user && await bcrypt.compare(password, user.password);
 
     if (passwordsMatch) {     
-      return this.generateToken(user.email);
+      return this.generateToken(user);
     }else{
       throw { message: 'No user found with such email or password', status: 404 };
     }   
@@ -51,25 +51,12 @@ export class AuthService {
     }
   }
 
-  private generateToken(userId: string): string {
-    const secretKey = 'secret123'; //Of course this should be hidden
-    const token = jwt.sign({ userId }, secretKey, { expiresIn: '1d' });
+  private generateToken(user: UserEntity): string {
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+       TOKEN_KEY!,
+      { expiresIn: '2h' }
+    );
     return token;
   }
 }
-
-export const authenticateUser = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.header('x-user-id');
-  
-  if (!userId) {
-    return res.status(403).send({ error: 'You must be authorized user' });
-  }
-
-  const user = await UserModel.findOne({ _id: userId }).exec();
-  
-  if (!user) {
-    return res.status(401).send({ error: 'User is not authorized' });
-  }
-  
-  next();
-};

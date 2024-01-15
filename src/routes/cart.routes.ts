@@ -6,9 +6,9 @@ const router = express.Router();
 const cartController = new CartController();
 const authController = new AuthController();
 
-router.get('/', authController.authenticateUser, cartController.getCart);
-router.put('/', authController.authenticateUser, cartController.updateCart);
-router.delete('/', authController.authenticateUser, cartController.removeCart);
-router.post('/checkout', authController.authenticateUser, cartController.checkout);
+router.get('/', authController.verifyToken, cartController.getCart);
+router.put('/', authController.verifyToken, cartController.updateCart);
+router.delete('/', authController.verifyToken, cartController.removeCart);
+router.post('/checkout', authController.verifyToken, cartController.checkout);
 
 export default router;
