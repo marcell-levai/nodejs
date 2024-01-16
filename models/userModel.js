@@ -37,8 +37,7 @@ function findByIdFull(id) {
 
 function create(user) {   
     return new Promise((resolve, reject) => {
-        const id = users.length + 1;
-        const newUser = {id: id, ...user, hobbies: []};
+        const newUser = {id: uuidv4(), ...user, hobbies: []};
         users.push(newUser);
         resolve(newUser);
     });
