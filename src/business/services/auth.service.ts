@@ -51,6 +51,11 @@ export class AuthService {
     }
   }
 
+  checkUserRole = async (userId: string) => {
+    const user = await this.userRepository.getUserById(userId);
+    return user.role;
+  }
+
   private generateToken(user: UserEntity): string {
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },

@@ -5,6 +5,7 @@ import cartsRoutes from './routes/cart.routes';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import mongoose from 'mongoose';
+import { AuthMiddleware } from './middlewares/auth.middleware';
 const swaggerDocument = YAML.load('./src/utils/swagger.yaml');
 
 const PORT = process.env.PORT || 4000;
@@ -27,9 +28,11 @@ app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
     next();
 });
+
+const authMiddleware = new AuthMiddleware();
 app.use('/api/auth', authRoutes);
-app.use('/api/products', productsRoutes);
-app.use('/api/profile/cart', cartsRoutes);
+app.use('/api/products', authMiddleware.verifyToken, productsRoutes);
+app.use('/api/profile/cart', authMiddleware.verifyToken, cartsRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.listen(PORT, () => console.log(`The server is running on port ${PORT}`));
