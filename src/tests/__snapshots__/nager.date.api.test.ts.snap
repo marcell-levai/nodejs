@@ -3,19 +3,6 @@
 exports[`Nager.Date API E2E tests NextPublicHolidays endpoint should retrieve the next public holidays for a country 1`] = `
 [
   {
-  "date": "2024-01-15",
-  "localName": "Martin Luther King, Jr. Day",
-  "name": "Martin Luther King, Jr. Day",
-  "countryCode": "US",
-  "fixed": false,
-  "global": true,
-  "counties": null,
-  "launchYear": null,
-  "types": [
-    "Public"
-  ]
-},
-  {
   "date": "2024-02-19",
   "localName": "Presidents Day",
   "name": "Washington's Birthday",

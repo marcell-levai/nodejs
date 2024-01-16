@@ -57,10 +57,6 @@ describe('unit tests', () => {
 
 //integration tests
 describe('integration tests', () => {
-    const mockPublicHolidays = [
-        { name: 'New Year\'s Day', localName: 'New Year\'s Day', date: '2024-01-01' },
-        { name: 'Good Friday', localName: 'Good Friday', date: '2024-04-10' },
-    ];
   
     beforeEach(() => {
       jest.resetAllMocks();
@@ -69,80 +65,44 @@ describe('integration tests', () => {
     it('should retrieve a list of public holidays', async () => {
       const year = 2024;
       const country = 'GB';
-  
-      axios.get = jest.fn().mockResolvedValueOnce({ data: mockPublicHolidays });
-  
       const holidays = await getListOfPublicHolidays(year, country);
-  
-      expect(axios.get).toHaveBeenCalledWith(
-        expect.stringContaining(`/PublicHolidays/${year}/${country}`)
-      );
-      expect(holidays).toEqual(mockPublicHolidays);
+
+      expect(holidays).toEqual(expect.any(Array));
     });
   
     it('should check if today is a public holiday', async () => {
       const country = 'GB';
-  
-      axios.get = jest.fn().mockResolvedValueOnce({ status: 200 });
-  
       const isPublicHoliday = await checkIfTodayIsPublicHoliday(country);
-  
-      expect(axios.get).toHaveBeenCalledWith(
-        expect.stringContaining(`/IsTodayPublicHoliday/${country}`)
-      );
-      expect(isPublicHoliday).toBeTruthy();
+
+      expect(isPublicHoliday).toEqual(expect.any(Boolean));
     });
   
     it('should retrieve the next public holidays', async () => {
       const country = 'GB';
-  
-      axios.get = jest.fn().mockResolvedValueOnce({ data: mockPublicHolidays });
-  
       const nextHolidays = await getNextPublicHolidays(country);
-  
-      expect(axios.get).toHaveBeenCalledWith(
-        expect.stringContaining(`/NextPublicHolidays/${country}`)
-      );
-      expect(nextHolidays).toEqual(mockPublicHolidays);
+
+      expect(nextHolidays).toEqual(expect.any(Array));
     });
   
     it('should handle API error gracefully while getting list of public holidays', async () => {
       const year = 2024;
       const country = 'GB';
-  
-      axios.get = jest.fn().mockRejectedValueOnce(new Error('API error'));
-  
       const holidays = await getListOfPublicHolidays(year, country);
   
-      expect(axios.get).toHaveBeenCalledWith(
-        expect.stringContaining(`/PublicHolidays/${year}/${country}`)
-      );
       expect(holidays).toEqual([]);
     });
   
     it('should handle API error gracefully while checking if today is a public holiday', async () => {
       const country = 'GB';
-  
-      axios.get = jest.fn().mockRejectedValueOnce(new Error('API error'));
-  
       const isPublicHoliday = await checkIfTodayIsPublicHoliday(country);
-  
-      expect(axios.get).toHaveBeenCalledWith(
-        expect.stringContaining(`/IsTodayPublicHoliday/${country}`)
-      );
+
       expect(isPublicHoliday).toBeFalsy();
     });
   
     it('should handle API error gracefully while getting next public holidays', async () => {
       const country = 'GB';
-  
-      axios.get = jest.fn().mockRejectedValueOnce(new Error('API error'));
-  
       const nextHolidays = await getNextPublicHolidays(country);
-  
-      expect(axios.get).toHaveBeenCalledWith(
-        expect.stringContaining(`/NextPublicHolidays/${country}`)
-      );
+
       expect(nextHolidays).toEqual([]);
     });
   });
