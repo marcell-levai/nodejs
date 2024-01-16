@@ -1,6 +1,6 @@
 
 class EventEmitter {
-    listeners = {};  // key-value pair
+    listeners = {};
    
     addListener(eventName, fn) {
         if(!this.listeners[eventName]){
