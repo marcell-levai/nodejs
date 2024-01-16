@@ -1,66 +1,71 @@
-import { UpdateCartItemEntity } from '../../schemas/cart.entity';
-import { changeCart, createOrder, findCart, removeCart, validateCartItems } from '../../data/repositories/cart.repository';
-import { RequestHandler } from 'express';
+import { CartEntity, CartItemEntity, UpdateCartItemEntity, dataSchema } from '../../schemas/cart.entity';
+import { CartRepository } from '../../data/repositories/cart.repository';
+import { ProductRepository } from '../../data/repositories/product.repository';
 
-export const getCart: RequestHandler = async (req, res) => {
-    const userId = req.header('x-user-id');
+export class CartService {
+  private cartRepository: CartRepository;
+  private productRepository: ProductRepository;
+
+  constructor(){
+    this.cartRepository = new CartRepository();
+    this.productRepository = new ProductRepository();
+  }
+
+  getCartByUserId(userId: string): CartEntity {
+    const cart = this.cartRepository.getCart(userId);
     
-    try{   
-      const data = await findCart(userId);
-      return res.status(200).json({ data , error: null }); 
-    }catch(error){
-      console.error('Internal Server error:', error);
-      return res.status(500).json({ data: null, error: { message: 'Internal Server error' } });
+    if(cart){
+      return cart;
+    }else{
+      return this.cartRepository.createCart(userId);
     }
-};
+  }
 
-export const updateCart: RequestHandler = async (req, res) => {
-  const userId = req.header('x-user-id');
-  const items: UpdateCartItemEntity[] = req.body;
+  updateCartItems(userId: string, items: UpdateCartItemEntity[]): CartEntity{
+    const cart = this.cartRepository.getCart(userId);
 
-  try{
-    const valid = validateCartItems(items);
-    if(!valid){
-      return res.status(400).json({ data: null, error: { message: 'Porducts are not valid' } });
+    if (!cart) {
+      throw { status: 404, message: 'Cart not found' };
     }
-
-    const data = await changeCart(userId, items);
-    if(!data){
-      return res.status(404).json({ data: null, error: { message: 'Cart was not found' } });
+    
+    if (!Array.isArray(items)) {
+      items = [items];
     }
 
-    return res.status(200).json({ data , error: null }); 
-  }catch(error){
-    console.error('Internal Server error:', error);
-    return res.status(500).json({ data: null, error: { message: 'Internal Server error' } });
+    let validatedItems : CartItemEntity[] = [];
+    for (const item of items) {
+      const { error } = dataSchema.validate(item);
+
+      if (error) {
+        throw { message: 'Products are not valid', status: 400 };
+      } else {
+        const { productId, count } = item;
+        const product = this.productRepository.findProductById(productId);
+
+        if (!product) {
+          throw { message: 'Products are not valid', status: 400 };
+        }
+
+        const cartItem: CartItemEntity = {
+          product: product,
+          count: count,
+        };
+        validatedItems.push(cartItem);
+      }
+    }
+    return this.cartRepository.updateCartItems(cart.userId, validatedItems);
   }
-};
 
-export const deleteCart: RequestHandler = async (req, res) => {
-  const userId = req.header('x-user-id');
-  
-  try{
-      const success = await removeCart(userId);
-      return res.status(200).json({ data: success , error: null }); 
-  }catch(error){
-    console.error('Internal Server error:', error);
-    return res.status(500).json({ data: null, error: { message: 'Internal Server error' } });
+
+  removeCart(userId: string): boolean {
+    const cart = this.cartRepository.getCart(userId); 
+
+    if (!cart) {
+      throw { status: 404, message: 'Cart was not found' };
+    }
+
+    const deletedCart = this.cartRepository.removeCart(userId);
+
+    return deletedCart.isDeleted;
   }
-};
-
-export const checkout: RequestHandler = async (req, res) => {
-  const userId = req.header('x-user-id');
-
-  try{
-      const order = createOrder(userId);
-
-      if(!order){
-        return res.status(200).json({ data: null , error: "Cart is empty" }); 
-      }else{
-        return res.status(200).json({ data: order , error: null }); 
-      }  
-  }catch(error){
-    console.error('Internal Server error:', error);
-    return res.status(500).json({ data: null, error: { message: 'Internal Server error' } });
-  }
-};
+}

@@ -1,4 +1,5 @@
-import { ProductEntity, product as bookProduct } from './product.entity'
+import { ProductEntity, product as bookProduct } from './product.entity';
+const Joi = require('joi');
 
 export interface CartItemEntity {
   product: ProductEntity;
@@ -16,3 +17,8 @@ export interface CartEntity {
   isDeleted: boolean;
   items: CartItemEntity[];
 }
+
+export const dataSchema = Joi.object({
+  productId: Joi.string().guid({ version: 'uuidv4' }).required(),
+  count: Joi.number().integer().min(0).required()
+});

@@ -1,64 +1,76 @@
 import bcrypt from 'bcrypt';
-import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { findByEmail, create, generateToken, findById } from '../../data/repositories/user.repository';
+import { UserRepository } from '../../data/repositories/user.repository';
+import { v4 as uuidv4 } from 'uuid';
+import { UserEntity } from '../../schemas/user.entity';
+import jwt from 'jsonwebtoken';
 
-export const register: RequestHandler = async (req, res) => {
-  const { email, password, role } = req.body;
+export class AuthService {
+  private userRepository: UserRepository;
 
-  try{
-    const user = await findByEmail(email);
+  constructor() {
+    this.userRepository = new UserRepository();
+  }
+
+  async register(email: string, password: string, role: string): Promise<UserEntity>{
+    const user = this.userRepository.getUserByEmail(email);
+    
     if (user) {
-      return res.status(400).json({ data: null, message: 'Email is not valid' });
+      throw { message: 'Email is not valid', status: 400 };
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await create(email, hashedPassword, role);
+    const newUser: UserEntity = { id: uuidv4(), email, password: hashedPassword, role };
 
-    return res.status(200).json({ 
-      data:{
-        id: newUser.id,
-        email: newUser.email,
-        role: newUser.role
-      },
-      error: null
-    });
-  }catch(error){
-    console.error('Internal Server error:', error);
-    return res.status(500).json({ data: null, error: { message: 'Internal Server error' } });
+    return this.userRepository.createUser(newUser);
   }
-};
 
-export const login: RequestHandler = async (req, res) => {
-  const { email, password } = req.body;
+  async login(email: string, password: string): Promise<string>{
+    const user = this.userRepository.getUserByEmail(email);
 
-  try {
-    const user = await findByEmail(email);
+    if (!user) {
+      throw { message: 'No user found with such email or password', status: 404 };
+    }
+
     const passwordsMatch = user && await bcrypt.compare(password, user.password);
 
-    if (passwordsMatch) {
-      const token = generateToken(user.id);
-      return res.status(200).json({ data: { token }, error: null });
-    } else {
-      return res.status(404).json({ data: null, error: { message: 'No user found with such email or password' } });
+    if (passwordsMatch) {     
+      return this.generateToken(user.email);
+    }else{
+      throw { message: 'No user found with such email or password', status: 404 };
+    }   
+  }
+
+  authenticateUser = async (userId: string) => {
+    if (!userId) {
+      throw { message: 'You must be authorized user', status: 403 };
     }
-  } catch(error) {
-    console.error('Internal Server error:', error);
-    return res.status(500).json({ data: null, error: { message: 'Internal Server error' } });
-  }
-};
-
-export const authenticateUser = (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.header('x-user-id');
   
-  if (!userId) {
-    return res.status(403).send({ error: 'You must be authorized user' });
+    const user = this.userRepository.getUserById(userId);
+    
+    if (!user) {
+      throw { message: 'User is not authorized', status: 401 };
+    }
   }
 
-  const user = findById(userId);
-  
-  if (!user) {
-    return res.status(401).send({ error: 'User is not authorized' });
+  private generateToken(userId: string): string {
+    const secretKey = 'secret123'; //Of course this should be hidden
+    const token = jwt.sign({ userId }, secretKey, { expiresIn: '1d' });
+    return token;
   }
+}
+
+// export const authenticateUser = (req: Request, res: Response, next: NextFunction) => {
+//   const userId = req.header('x-user-id');
   
-  next();
-};
+//   if (!userId) {
+//     return res.status(403).send({ error: 'You must be authorized user' });
+//   }
+
+//   const user = findById(userId);
+  
+//   if (!user) {
+//     return res.status(401).send({ error: 'User is not authorized' });
+//   }
+  
+//   next();
+// };
