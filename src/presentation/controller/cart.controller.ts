@@ -47,7 +47,7 @@ export class CartController {
     removeCart: RequestHandler = async (req, res) => {
         try{
             const userId = req.header('x-user-id');
-            const success = this.cartService.removeCart(userId);
+            const success = await this.cartService.removeCart(userId);
             return res.status(200).json({ data: success, error: null });
         }catch(error){
             return res.status(error.status || 500).json({ data: null, error: { message: error.message || 'Internal Server Error' }});

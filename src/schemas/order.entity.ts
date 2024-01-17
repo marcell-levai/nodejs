@@ -7,7 +7,7 @@ type ORDER_STATUS = 'created' | 'completed';
 export interface OrderEntity {
   userId: string;
   cartId: string;
-  items: CartItemEntity[] // products from CartEntity
+  items: CartItemEntity[]
   payment: {
     type: string,
     address?: any,
@@ -24,8 +24,8 @@ export interface OrderEntity {
 
 const OrderSchema: Schema = new Schema({
   _id: { type: String, default: uuidv4, alias: 'id' },
-  userId: { type: String, required: true },
-  cartId: { type: String, required: true },
+  userId: { type: Schema.Types.String, ref: "User", required: true },
+  cartId: { type: Schema.Types.String, ref: "Cart", required: true },
   items: { type: [CartItemSchema], required: true },
   payment: {
     type: { type: String, required: true },

@@ -6,13 +6,13 @@ export class CartRepository {
   }
 
   createCart(userId: string): Promise<CartEntity> {
-    const newCart: CartEntity = new CartModel({
+    const newCart = new CartModel({
       userId,
       isDeleted: false,
       items: [],
     });
 
-    return CartModel.create(newCart);
+    return newCart.save();
   }
 
   async removeCart(cart: CartEntity): Promise<CartEntity> {

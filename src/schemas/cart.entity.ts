@@ -31,7 +31,7 @@ export const CartItemSchema: Schema = new Schema({
 
 const CartSchema: Schema = new Schema({
   _id: { type: String, default: uuidv4, alias: 'id' },
-  userId: { type: String, required: true },
+  userId: { type: Schema.Types.String, ref: "User", required: true },
   isDeleted: { type: Boolean, required: true },
   items: [CartItemSchema],
 },
