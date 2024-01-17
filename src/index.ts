@@ -7,10 +7,10 @@ import YAML from 'yamljs';
 import mongoose from 'mongoose';
 const swaggerDocument = YAML.load('./src/utils/swagger.yaml');
 import { MONGO_URL, PORT} from '../config';
-import { requestLogger } from 'logger';
+import { requestLogger } from './logger';
 
 const app : Express = express();
-
+console.log(PORT);
 mongoose.connect(MONGO_URL)
   .then(() => {
     console.log('Connected to MongoDB');
@@ -32,8 +32,16 @@ app.use('/api/profile/cart', cartsRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get('/health', (req, res) => {
-  res.status(200).json({
-    message: 'Application is healthy'
+  checkDBConnection((error) => {
+    if (error) {
+      res.status(500).json({
+        message: 'Application is unhealthy - Database connection failed',
+      });
+    } else {
+      res.status(200).json({
+        message: 'Application is healthy',
+      });
+    }
   });
 });
 
@@ -49,6 +57,16 @@ server.on('connection', (connection) => {
     connections = connections.filter((currentConnection) => currentConnection !== connection);
   });
 });
+
+function checkDBConnection(callback:(error: Error | null) => void) {
+  const isConnected = mongoose.connection.readyState === 1;
+
+  if (isConnected) {
+    callback(null);
+  } else {
+    callback(new Error('Database connection failed'));
+  }
+}
 
 function shutdown() {
   console.log('Received kill signal, shutting down gracefully');
