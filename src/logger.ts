@@ -14,6 +14,10 @@ const logger = winston.createLogger({
   ],
 });
 
+logger.add(new transports.File({ filename: 'error.log', level: 'error' }));
+
+logger.add(new transports.Console({ level: 'debug' }));
+
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
     const start = new Date().getTime();
   

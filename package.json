@@ -21,7 +21,9 @@
   },
   "husky": {
     "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+      "pre-push": "npm run prepush",
+      "pre-commit": "npm run precommit"
     }
   },
   "author": "",
@@ -52,6 +54,7 @@
     "@types/yamljs": "^0.2.34",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
+    "commitlint": "^18.4.4",
     "debug": "^4.3.4",
     "depcheck": "^1.4.7",
     "dotenv": "^16.3.1",
