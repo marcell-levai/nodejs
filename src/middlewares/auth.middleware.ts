@@ -35,7 +35,7 @@ export class AuthMiddleware {
         const userId = req.header("x-user-id");
         const role = await this.authservice.checkUserRole(userId);
 
-        if(role === "admin"){
+        if(role !== "admin"){
             return res.status(403).send("Access Forbidden");
         }
         next();
