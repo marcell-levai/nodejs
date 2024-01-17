@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import express, { Express } from 'express';
 import authRoutes from './routes/auth.routes';
 import productsRoutes from './routes/product.routes';
@@ -8,9 +9,9 @@ import mongoose from 'mongoose';
 const swaggerDocument = YAML.load('./src/utils/swagger.yaml');
 import { MONGO_URL, PORT} from '../config';
 import { requestLogger } from './logger';
+import { Socket } from 'net';
 
 const app : Express = express();
-console.log(PORT);
 mongoose.connect(MONGO_URL)
   .then(() => {
     console.log('Connected to MongoDB');
@@ -48,13 +49,13 @@ app.get('/health', (req, res) => {
 app.use(requestLogger);
 
 const server = app.listen(PORT, () => console.log(`The server is running on port ${PORT}`));
-let connections: any[] = [];
+let connections: any = [];
 
 server.on('connection', (connection) => {
   connections.push(connection);
 
   connection.on('close', () => {
-    connections = connections.filter((currentConnection) => currentConnection !== connection);
+    connections = connections.filter((currentConnection: Socket) => currentConnection !== connection);
   });
 });
 
@@ -81,10 +82,10 @@ function shutdown() {
     process.exit(1);
   }, 20000);
 
-  connections.forEach((connection) => connection.end());
+  connections.forEach((connection: { end: () => any; }) => connection.end());
 
   setTimeout(() => {
-    connections.forEach((connection) => connection.destroy());
+    connections.forEach((connection: { destroy: () => any; }) => connection.destroy());
   }, 10000);
 }
 

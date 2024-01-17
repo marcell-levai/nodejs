@@ -1,0 +1,4 @@
+{"level":"info","message":"Incoming Request - Method: GET, Path: /helth","timestamp":"2024-01-17T12:55:54.027Z"}
+{"level":"info","message":"Request handled - Method: GET, Path: /helth, Response Time: 6ms","timestamp":"2024-01-17T12:55:54.033Z"}
+{"level":"info","message":"Incoming Request - Method: GET, Path: /favicon.ico","timestamp":"2024-01-17T12:55:57.651Z"}
+{"level":"info","message":"Request handled - Method: GET, Path: /favicon.ico, Response Time: 1ms","timestamp":"2024-01-17T12:55:57.652Z"}
